@@ -158,7 +158,11 @@ personal-site/
 
 ## 五、部署到 GitHub Pages
 
-> ⚠️ **以下步骤尚未执行**。确认无误后由你自己操作。
+> ✅ **已完成部署**（2026-09-16）。线上地址：**<https://claw510.github.io>**
+>
+> - 仓库：<https://github.com/claw510/claw510.github.io>（public）
+> - Pages Source：**GitHub Actions**
+> - 以下步骤保留为**记录与复现参考**；日常更新只需看「之后怎么更新」一节。
 
 ### 前置：确认 `site` 配置
 
@@ -178,30 +182,54 @@ site: 'https://claw510.github.io',
 ```bash
 cd ~/Documents/personal-site
 
-# 本机 brew 不可用，用自带的 git
-export PATH="$HOME/.local/bin:$PATH"
-
 git init -b main
 git add .
 git commit -m "chore: 初始化个人站点"
 ```
 
 > `dist/` 和 `node_modules/` 已在 `.gitignore` 里，不会被提交。**构建产物由 CI 生成，不要手动提交。**
+>
+> 提交身份用的是**仓库级（repo-local）**配置，不影响全局 git 身份：
+>
+> ```bash
+> git config user.name  "claw510"
+> git config user.email "283535344+claw510@users.noreply.github.com"   # GitHub 隐私邮箱
+> ```
 
 ### 步骤 2：在 GitHub 上创建仓库
 
-在 <https://github.com/new> 创建仓库，例如 `blog`。
+实际用 `gh repo create` 一行完成（仓库名 `claw510.github.io`，public）：
 
-**不要**勾选 “Add a README file / .gitignore / license” —— 保持完全空仓库，避免首次推送冲突。
+```bash
+gh repo create claw510.github.io --public --source=. --remote=origin \
+  --description "聆风的个人文章站 — 记录思考、工具与日常"
+```
+
+> 手动在 <https://github.com/new> 建也可以，但**不要**勾选 “Add a README file / .gitignore / license”，保持空仓库，避免首次推送冲突。
+>
+> 仓库必须是 **public** —— 免费账户的 Pages 不支持私有仓库。
 
 ### 步骤 3：关联远程并推送
 
 ```bash
-git remote add origin git@github.com:claw510/blog.git   # 换成你的仓库地址
+git remote add origin https://github.com/claw510/claw510.github.io.git
 git push -u origin main
 ```
 
-（用 HTTPS 的话地址形如 `https://github.com/claw510/blog.git`。）
+> **走 HTTPS 需要凭证助手**。本机由 `gh`（已登录）接管：
+>
+> ```bash
+> gh auth setup-git    # 往 ~/.gitconfig 追加 github.com 的 credential.helper
+> ```
+>
+> ⚠️ 推送含 `.github/workflows/` 的提交时，token 必须带 **`workflow`** scope，否则会被拒：
+>
+> ```
+> refusing to allow a Personal Access Token to create or update workflow
+> `.github/workflows/deploy.yml` without `workflow` scope
+> ```
+>
+> 补授权：`gh auth refresh -h github.com -s workflow`。GitHub 不允许仅凭 `repo` 权限写工作流文件 —— 工作流等于能在 CI 里跑任意代码，属于提权操作。
 
 ### 步骤 4：添加自动部署 Workflow
 
@@ -228,11 +256,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -241,7 +269,7 @@ jobs:
       - name: Build
         run: npm run build
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: ./dist
 
@@ -253,7 +281,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 ```
 
 然后：
@@ -270,12 +298,18 @@ git push
 
 （**不要**选 “Deploy from a branch” —— 那是给手动提交构建产物的老方式，我们用 Actions 构建。）
 
+也可以用 API 一行完成：
+
+```bash
+gh api -X POST repos/claw510/claw510.github.io/pages -f build_type=workflow
+```
+
 ### 步骤 6：等第一次部署完成
 
 回到仓库 **Actions** 标签页，等 `Deploy to GitHub Pages` 跑完（通常 1–2 分钟）。之后访问：
 
 ```text
-https://claw510.github.io/blog/
+https://claw510.github.io/
 ```
 
 ### 之后怎么更新
@@ -301,11 +335,28 @@ git push
 
 ## 六、验证记录
 
-构建与本地运行的验证结果见提交时的验证报告。关键命令：
+### 本地（2026-09-16 搭建时）
 
 ```bash
-npm run build                      # 期望：11 page(s) built，生成 dist/
-npm run dev                        # 期望：http://localhost:4321/ 就绪
+npm run build                      # 11 page(s) built，生成 dist/
+npm run preview                    # 生产形态，端口 4321
 curl -sS -o /dev/null -w '%{http_code}\n' http://localhost:4321/
-curl -sS http://localhost:4321/rss.xml | head
+curl -sS http://localhost:4321/rss.xml | python3 -c 'import sys,xml.etree.ElementTree as E; E.parse(sys.stdin)'
 ```
+
+- 首页 / 文章页 / 标签页 / RSS / sitemap 全部 200
+- RSS 用 `xml.etree` 真实解析通过（3 条 item）
+- 未知路径正确返回 404
+
+### 线上（部署后）
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' https://claw510.github.io/            # 200
+curl -sS https://claw510.github.io/ | grep -o '<title>[^<]*</title>'            # <title>聆风的笔记</title>
+curl -sS -o /dev/null -w '%{http_code}\n' https://claw510.github.io/posts/hello-world/   # 200
+curl -sS -o /dev/null -w '%{http_code} %{content_type}\n' https://claw510.github.io/rss.xml      # 200 application/xml
+curl -sS -o /dev/null -w '%{http_code}\n' https://claw510.github.io/sitemap-index.xml            # 200
+curl -sS -o /dev/null -w '%{http_code}\n' https://claw510.github.io/definitely-not-a-page/       # 404
+```
+
+部署 workflow 运行结果：<https://github.com/claw510/claw510.github.io/actions>
