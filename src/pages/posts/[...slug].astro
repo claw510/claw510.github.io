@@ -1,0 +1,57 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublishedPosts, formatDate, tagUrl, toISO } from '../../lib/posts';
+import { SITE } from '../../site';
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  type="article"
+  publishedTime={toISO(post.data.date)}
+>
+  <article class="article">
+    <header class="article__header">
+      <h1 class="article__title">{post.data.title}</h1>
+
+      <div class="article__meta">
+        <time datetime={toISO(post.data.date)}>{formatDate(post.data.date)}</time>
+        {
+          post.data.tags.length > 0 && (
+            <ul class="tag-list">
+              {post.data.tags.map((tag) => (
+                <li>
+                  <a class="tag" href={tagUrl(tag)}>
+                    {tag}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </div>
+
+      {post.data.description && <p class="article__lede">{post.data.description}</p>}
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <footer class="article__footer">
+      <a href="/">← 回到首页</a>
+    </footer>
+  </article>
+</BaseLayout>

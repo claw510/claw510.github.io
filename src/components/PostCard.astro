@@ -1,0 +1,36 @@
+---
+import type { Post } from '../lib/posts';
+import { formatDate, postUrl, tagUrl, toISO } from '../lib/posts';
+
+interface Props {
+  post: Post;
+}
+
+const { post } = Astro.props;
+---
+
+<article class="post-card">
+  <h3 class="post-card__title">
+    <a href={postUrl(post)}>{post.data.title}</a>
+  </h3>
+
+  <p class="post-card__desc">{post.data.description}</p>
+
+  <div class="post-card__meta">
+    <time datetime={toISO(post.data.date)}>{formatDate(post.data.date)}</time>
+
+    {
+      post.data.tags.length > 0 && (
+        <ul class="tag-list">
+          {post.data.tags.map((tag) => (
+            <li>
+              <a class="tag" href={tagUrl(tag)}>
+                {tag}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+</article>

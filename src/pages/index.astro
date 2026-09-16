@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+import { getPublishedPosts } from '../lib/posts';
+import { SITE } from '../site';
+
+const posts = await getPublishedPosts();
+---
+
+<BaseLayout>
+  <section class="intro">
+    <h1 class="intro__title">{SITE.title}</h1>
+    <p class="intro__lede">{SITE.description}</p>
+    <div class="intro__links">
+      <a href="/about/">关于这个站 →</a>
+      <a href="/tags/">全部标签</a>
+      <a href="/rss.xml">订阅 RSS</a>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">文章</h2>
+
+    {
+      posts.length === 0 ? (
+        <p>还没有文章。在 <code>src/content/posts/</code> 里新建一个 <code>.md</code> 文件就会出现在这里。</p>
+      ) : (
+        <div class="post-list">
+          {posts.map((post) => (
+            <PostCard post={post} />
+          ))}
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>

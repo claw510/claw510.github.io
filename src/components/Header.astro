@@ -1,0 +1,43 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+import { SITE } from '../site';
+
+const links = [
+  { href: '/', label: '首页' },
+  { href: '/tags/', label: '标签' },
+  { href: '/about/', label: '关于' },
+  { href: '/rss.xml', label: 'RSS' },
+];
+
+const path = Astro.url.pathname;
+
+function isActive(href: string): boolean {
+  if (href === '/') return path === '/' || path === '';
+  if (href === '/rss.xml') return false;
+  // /tags/ 与 /tags/xxx/ 都算「标签」高亮
+  if (href === '/tags/') return path.startsWith('/tags');
+  return path === href || path.startsWith(href);
+}
+---
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="site-header__brand" href="/">{SITE.title}</a>
+
+    <nav class="site-nav" aria-label="主导航">
+      {
+        links.map((link) => (
+          <a
+            class="site-nav__link"
+            href={link.href}
+            aria-current={isActive(link.href) ? 'page' : undefined}
+          >
+            {link.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <ThemeToggle />
+  </div>
+</header>

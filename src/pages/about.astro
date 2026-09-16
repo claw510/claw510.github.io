@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../site';
+---
+
+<BaseLayout title="关于" description={`关于 ${SITE.title} 和作者 ${SITE.author}`}>
+  <article class="article">
+    <header class="article__header">
+      <h1 class="article__title">关于</h1>
+    </header>
+
+    <div class="prose">
+      <p>
+        这里是 <strong>{SITE.author}</strong> 的个人笔记。{SITE.description}
+      </p>
+
+      <h2>这个站在哪</h2>
+      <p>
+        静态站点，没有数据库，没有登录，也没有评论系统。文章全部以 Markdown
+        文件的形式存在仓库里，构建一次就变成一堆 HTML，托管在 GitHub Pages 上。
+      </p>
+      <p>
+        这样做的好处是简单：没有服务器要维护，没有依赖会过期，内容也不会被某个平台的规则挟持。
+      </p>
+
+      <h2>会写什么</h2>
+      <ul>
+        <li><strong>思考</strong> —— 读书、看片、日常里冒出来的想法</li>
+        <li><strong>工具</strong> —— 在用什么、怎么用、踩过什么坑</li>
+        <li><strong>习惯</strong> —— 怎么把一件事持续做下去，包括失败的尝试</li>
+      </ul>
+
+      <h2>怎么联系</h2>
+      <p>
+        没有开放留言。想说的话，邮件或者当面聊都行 ——
+        比起在评论区排队，我更喜欢直接一点的方式。
+      </p>
+
+      <h2>订阅</h2>
+      <p>
+        想第一时间看到更新，可以订阅 <a href="/rss.xml">RSS</a>。这个站不推送通知，不收集数据，不追踪你。
+      </p>
+    </div>
+
+    <footer class="article__footer">
+      <a href="/">← 回到首页</a>
+    </footer>
+  </article>
+</BaseLayout>
